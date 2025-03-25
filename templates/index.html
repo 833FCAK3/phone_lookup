@@ -1,0 +1,36 @@
+{% block content %}
+<div class="container">
+    <h2>Search Page</h2>
+    <form id="search-form">
+        <input type="text" id="phone-number" name="query" placeholder="Enter phone number" maxlength="10"
+            pattern="\d{10}" title="Enter a 10-digit phone number" oninput="validateInput()">
+        <button type="button" id="search-button" onclick="searchPhoneNumber()" disabled>Search</button>
+    </form>
+
+    <div id="results" class="results"></div>
+</div>
+
+<script>
+    function validateInput() {
+        let phoneNumber = document.getElementById('phone-number').value;
+        const searchButton = document.getElementById('search-button');
+        phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+        document.getElementById('phone-number').value = phoneNumber;
+        searchButton.disabled = !(phoneNumber.length === 10);
+    }
+
+    function searchPhoneNumber() {
+        const phoneNumber = document.getElementById('phone-number').value;
+
+        fetch(`/search-phone/?num=${encodeURIComponent(phoneNumber)}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('results').innerHTML = `<h3>Search Results:</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            })
+            .catch(error => {
+                document.getElementById('results').innerHTML = '<p>Error fetching data.</p>';
+                console.error('Error:', error);
+            });
+    }
+</script>
+{% endblock %}
