@@ -1,8 +1,11 @@
 import json
+from functools import lru_cache
 
 import requests
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+
+from .models import PhonesLookedUp
 
 
 # Create your views here.
@@ -10,6 +13,7 @@ def index(request) -> HttpResponse:
     return render(request, "index.html")
 
 
+@lru_cache
 def search_phone(request) -> JsonResponse:
     print(type(request))
     if request.method == "GET":
@@ -27,11 +31,22 @@ def search_phone(request) -> JsonResponse:
         try:
             response = requests.get(url, headers=headers)
             response.raise_for_status()  # Raise an error for bad status codes
+            operator = json.loads(response.content)["data"][0]["operator"]
+            region = json.loads(response.content)["data"][0]["region_gar"]
+
             data = {
                 "phone_number": phone_number,
-                "operator": json.loads(response.content)["data"][0]["operator"],
-                "region": json.loads(response.content)["data"][0]["region_gar"],
+                "operator": operator,
+                "region": region,
             }
+
+            new_phone = PhonesLookedUp.objects.create(
+                phone_number=phone_number,
+                operator=operator,
+                region=region,
+            )
+            new_phone.save()
+
             return JsonResponse(data, json_dumps_params={"ensure_ascii": False})
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": f"Failed to fetch data: {str(e)}"}, status=500)
