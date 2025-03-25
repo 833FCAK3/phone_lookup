@@ -1,4 +1,18 @@
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Lookup</title>
+    <style>
+        .result-container { 
+            margin-left: 0;
+            padding-left: 0;
+            text-align: left;
+        }
+    </style>
+</head>
+
 <div class="container">
     <h2>Search Page</h2>
     <form id="search-form">
@@ -19,18 +33,24 @@
         searchButton.disabled = !(phoneNumber.length === 10);
     }
 
-    function searchPhoneNumber() {
+    async function searchPhoneNumber() {
         const phoneNumber = document.getElementById('phone-number').value;
 
-        fetch(`/search-phone/?num=${encodeURIComponent(phoneNumber)}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('results').innerHTML = `<h3>Search Results:</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
-            })
-            .catch(error => {
-                document.getElementById('results').innerHTML = '<p>Error fetching data.</p>';
-                console.error('Error:', error);
-            });
+        try {
+            const response = await fetch(`/search-phone?num=${encodeURIComponent(phoneNumber)}`);
+            const data = await response.json();
+
+            document.getElementById('results').innerHTML = `
+                <h3>Search Results:</h3>
+                <div class="result-container">
+                    Номер телефона: ${data.phone_number}<br>
+                    Оператор: ${data.operator}<br>
+                    Регион: ${data.region}
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('results').innerHTML = '<p>Error fetching data.</p>';
+            console.error('Error:', error);
+        }
     }
 </script>
-{% endblock %}
